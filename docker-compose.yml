@@ -1,0 +1,38 @@
+# Local dev stack — Postgres 16 with pgvector, plus Redis for cache/throttle/RQ.
+#
+# Usage:
+#   docker compose up -d
+#   python manage.py migrate
+#   python manage.py runserver
+#
+# Production deploy goes through Render (see render.yaml). This file is
+# strictly for the inner-loop dev experience.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: setu
+      POSTGRES_USER: setu
+      POSTGRES_PASSWORD: setu
+    ports:
+      - "5432:5432"
+    volumes:
+      - setu_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U setu -d setu"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - setu_redis:/data
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+volumes:
+  setu_db:
+  setu_redis:
