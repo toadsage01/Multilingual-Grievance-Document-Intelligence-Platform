@@ -1,0 +1,55 @@
+# Render blueprint. Deploys one web service from main.
+#
+# Required env vars (set in Render dashboard or via `render env`):
+#   DJANGO_SECRET_KEY
+#   DATABASE_URL          (Neon Postgres with pgvector)
+#   REDIS_URL             (Upstash Redis)
+#   GROQ_API_KEY
+#   GEMINI_API_KEY
+#
+# Render auto-deploys on every push to main. The release command runs
+# migrations before the new release takes traffic, so a schema change
+# lands before the new code reads from it.
+
+services:
+  - type: web
+    name: setu
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    releaseCommand: python manage.py migrate --noinput
+    startCommand: gunicorn config.wsgi:application --workers 2 --timeout 60
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "setu.onrender.com"
+      - key: EMBEDDING_MODEL_NAME
+        value: intfloat/multilingual-e5-base
+      - key: DEFAULT_LANGUAGE
+        value: "en"
+      - key: RAG_TOP_K
+        value: "5"
+      - key: RAG_CONFIDENCE_THRESHOLD
+        value: "0.72"
+      - key: LLM_PRIMARY_PROVIDER
+        value: groq
+      - key: LLM_FALLBACK_PROVIDER
+        value: gemini
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        sync: false
