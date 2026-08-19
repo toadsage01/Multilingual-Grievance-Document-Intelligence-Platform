@@ -5,6 +5,7 @@ POST /api/v1/conversations/{id}/messages/stream/  -- SSE turn
 """
 import json
 import uuid
+from django.http import StreamingHttpResponse
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -103,8 +104,10 @@ class StreamingSSEView(APIView):
                 yield f"event: {event}\ndata: {payload}\n\n"
             yield "event: end\ndata: {}\n\n"
 
-        resp = Response(event_stream, status=status.HTTP_200_OK)
-        resp["Content-Type"] = "text/event-stream"
+        # use Django's StreamingHttpResponse, not DRF Response — DRF Response
+        # buffers the whole body, which defeats the SSE token-by-token flow
+        resp = StreamingHttpResponse(event_stream(), status=status.HTTP_200_OK,
+                                      content_type="text/event-stream")
         resp["Cache-Control"] = "no-cache"
-        resp["X-Accel-Buffering"] = "no"  # nginx: don't buffer SSE
+        resp["X-Accel-Buffering"] = "no"  # tell nginx not to buffer SSE
         return resp
