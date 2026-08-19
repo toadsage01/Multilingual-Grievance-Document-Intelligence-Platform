@@ -1,0 +1,35 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# django
+*.sqlite3
+media/
+staticfiles/
+/config/settings/local.py
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# sentence-transformers model cache
+.models/
